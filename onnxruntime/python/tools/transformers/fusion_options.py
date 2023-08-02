@@ -18,6 +18,9 @@ class AttentionMaskFormat:
     # No attention mask
     NoMask = 3
 
+    # key sequence lengths, cumulated lengths of query and key. Shape is (3 * batch_size + 2).
+    KeyLengthsAndQueryKeyCumulatedLengths = 4
+
 
 class FusionOptions:
     """Options of fusion in graph optimization"""
