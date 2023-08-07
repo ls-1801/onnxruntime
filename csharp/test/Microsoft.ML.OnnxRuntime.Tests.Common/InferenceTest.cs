@@ -363,7 +363,7 @@ namespace Microsoft.ML.OnnxRuntime.Tests
                     Assert.Equal(typeof(float), inputMeta[inputName].ElementType);
                     Assert.True(inputMeta[inputName].IsTensor);
                     var longShape = Array.ConvertAll<int, long>(inputMeta[inputName].Dimensions, Convert.ToInt64);
-                    var byteSize = longShape.Aggregate(1L, (a, b) => a * b) * sizeof(float);
+                    var byteSize = ShapeUtils.GetSizeForShape(longShape);
                     pinnedInputs.Add(FixedBufferOnnxValue.CreateFromMemory<float>(memInfo, inputData,
                         TensorElementType.Float, longShape, byteSize));
 
@@ -375,7 +375,7 @@ namespace Microsoft.ML.OnnxRuntime.Tests
                     Assert.Equal(typeof(float), outputMeta[outputName].ElementType);
                     Assert.True(outputMeta[outputName].IsTensor);
                     longShape = Array.ConvertAll<int, long>(outputMeta[outputName].Dimensions, Convert.ToInt64);
-                    byteSize = longShape.Aggregate(1L, (a, b) => a * b) * sizeof(float);
+                    byteSize = ShapeUtils.GetSizeForShape(longShape);
                     float[] outputBuffer = new float[expectedOutput.Length];
                     pinnedOutputs.Add(FixedBufferOnnxValue.CreateFromMemory<float>(memInfo, outputBuffer,
                         TensorElementType.Float, longShape, byteSize));
@@ -1993,7 +1993,7 @@ namespace Microsoft.ML.OnnxRuntime.Tests
 #endif
                 var session = (deviceId.HasValue)
                     ? new InferenceSession(model, option)
-                    : new InferenceSession(model);
+                                  : new InferenceSession(model);
                 float[] inputData = TestDataLoader.LoadTensorFromEmbeddedResource("bench.in");
                 float[] expectedOutput = TestDataLoader.LoadTensorFromEmbeddedResource("bench.expected_out");
                 var inputMeta = session.InputMetadata;
