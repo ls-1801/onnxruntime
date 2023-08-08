@@ -45,7 +45,7 @@ jobs:
   pool:
     name: onnxruntime-Ubuntu2004-AMD-CPU
     demands:
-      - ImageVersionOverride -equals 1.0.318321
+      - ImageVersionOverride -equals 1.0.338336
   steps:
   - task: mspremier.PostBuildCleanup.PostBuildCleanup-task.PostBuildCleanup@3
     displayName: 'Clean Agent Directories'
@@ -139,7 +139,7 @@ jobs:
   pool:
     name: Onnxruntime-Linux-GPU-T4
     demands:
-      - ImageVersionOverride -equals 1.0.318321
+      - ImageVersionOverride -equals 1.0.338336
   dependsOn:
   - Linux_Build
   steps:
