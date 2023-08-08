@@ -28,7 +28,7 @@ stages:
       pool:
         name: onnxruntime-Ubuntu2004-AMD-CPU
         demands:
-          - ImageVersionOverride -equals 1.0.338336
+          - ImageVersionOverride -equals 1.0.338693
 
       strategy:
         matrix:
