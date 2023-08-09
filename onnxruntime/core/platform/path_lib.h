@@ -181,8 +181,7 @@ inline wchar_t GetPathSep<wchar_t>() {
 
 inline std::basic_string<ORTCHAR_T> ConcatPathComponent(std::basic_string_view<ORTCHAR_T> left,
                                                         std::basic_string_view<ORTCHAR_T> right) {
-  std::filesystem::path p(left);
-  return p / right;
+  return std::filesystem::path(left) / std::filesystem::path(right);
 }
 
 #if defined(_WIN32)
