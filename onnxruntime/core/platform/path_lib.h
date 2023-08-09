@@ -178,7 +178,7 @@ inline wchar_t GetPathSep<wchar_t>() {
 }
 #endif
 
-std::basic_string<PATH_CHAR_TYPE> ConcatPathComponent(std::basic_string_view<PATH_CHAR_TYPE> left,
+inline std::basic_string<PATH_CHAR_TYPE> ConcatPathComponent(std::basic_string_view<PATH_CHAR_TYPE> left,
                                                       std::basic_string_view<PATH_CHAR_TYPE> right) {
   std::basic_string<PATH_CHAR_TYPE> ret(left);
   ret.append(1, GetPathSep<PATH_CHAR_TYPE>()).append(right);
