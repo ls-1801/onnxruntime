@@ -7,6 +7,7 @@
 #include <sstream>
 #include <assert.h>
 #include <stdexcept>
+#include <filesystem>
 #if defined(_AIX)
 #include <sys/stat.h>
 #include <iostream>
@@ -178,12 +179,10 @@ inline wchar_t GetPathSep<wchar_t>() {
 }
 #endif
 
-template <typename PATH_CHAR_TYPE>
-std::basic_string<PATH_CHAR_TYPE> ConcatPathComponent(std::basic_string_view<PATH_CHAR_TYPE> left,
-                                                      std::basic_string_view<PATH_CHAR_TYPE> right) {
-  std::basic_string<PATH_CHAR_TYPE> ret(left);
-  ret.append(1, GetPathSep<PATH_CHAR_TYPE>()).append(right);
-  return ret;
+inline std::basic_string<ORTCHAR_T> ConcatPathComponent(std::basic_string_view<ORTCHAR_T> left,
+                                                        std::basic_string_view<ORTCHAR_T> right) {
+  std::filesystem::path p(left);
+  return p / right;
 }
 
 #if defined(_WIN32)
@@ -282,7 +281,7 @@ void LoopDir(const std::string& dir_name, T func) {
   ORT_TRY {
     struct dirent* dp;
     while ((dp = readdir(dir)) != nullptr) {
-      std::basic_string<PATH_CHAR_TYPE> filename = ConcatPathComponent<PATH_CHAR_TYPE>(dir_name, dp->d_name);
+      std::basic_string<PATH_CHAR_TYPE> filename = ConcatPathComponent(dir_name, dp->d_name);
       if (stat(filename.c_str(), &stats) != 0) {
         continue;
       }

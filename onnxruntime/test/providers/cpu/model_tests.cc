@@ -1134,7 +1134,7 @@ static ORT_STRING_VIEW provider_name_dml = ORT_TSTR("dml");
   for (std::pair<ORT_STRING_VIEW, std::vector<ORT_STRING_VIEW>> kvp : provider_names) {
 #if !defined(USE_OPENVINO)
 #if !defined(_WIN32)
-    ORT_STRING_VIEW node_test_root_path = ORT_TSTR("/data/onnx"));
+    ORT_STRING_VIEW node_test_root_path = ORT_TSTR("/data/onnx");
 #else
     ORT_STRING_VIEW node_test_root_path = ORT_TSTR("c:\\local\\data\\onnx");
 #endif
@@ -1206,7 +1206,7 @@ static ORT_STRING_VIEW provider_name_dml = ORT_TSTR("dml");
           if (filename[0] == ORT_TSTR('.'))
             return true;
           if (f_type == OrtFileType::TYPE_DIR) {
-            std::basic_string<PATH_CHAR_TYPE> p = ConcatPathComponent<PATH_CHAR_TYPE>(node_data_root_path, filename);
+            std::basic_string<PATH_CHAR_TYPE> p = ConcatPathComponent(node_data_root_path, filename);
             paths.push_back(p);
             return true;
           }
@@ -1230,7 +1230,7 @@ static ORT_STRING_VIEW provider_name_dml = ORT_TSTR("dml");
           }
 #endif
           std::basic_ostringstream<PATH_CHAR_TYPE> oss;
-          oss << provider_name << ORT_TSTR("_") << ConcatPathComponent<PATH_CHAR_TYPE>(node_data_root_path, filename_str);
+          oss << provider_name << ORT_TSTR("_") << ConcatPathComponent(node_data_root_path, filename_str);
           v.emplace_back(oss.str());
           return true;
         });
