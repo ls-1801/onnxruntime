@@ -108,24 +108,6 @@ TEST_P(ModelTest, Run) {
   }
 
   std::unique_ptr<OnnxModelInfo> model_info = std::make_unique<OnnxModelInfo>(model_path.c_str());
-  if ((model_info->GetONNXOpSetVersion() < 14 || model_info->GetONNXOpSetVersion() > 17) &&
-      provider_name == "tensorrt") {
-    // TensorRT can run most of the model tests, but only part of
-    // them is enabled here to save CI build time.
-    // Besides saving CI build time, TRT isn’t able to support full ONNX ops spec and therefore some testcases will
-    // fail. That's one of reasons we skip those testcases and only test latest ONNX opsets.
-    SkipTest(" tensorrt: only enable opset 14 to 17 of onnx tests");
-    return;
-  }
-
-  if ((model_info->GetONNXOpSetVersion() == 10 || model_info->GetONNXOpSetVersion() >= 18) && provider_name == "dnnl") {
-    // DNNL can run most of the model tests, but only part of
-    // them is enabled here to save CI build time.
-    std::ostringstream oss;
-    oss << " dnnl doesn't support opset " << model_info->GetONNXOpSetVersion();
-    SkipTest(oss.str());
-    return;
-  }
 
   if (model_info->HasDomain(ONNX_NAMESPACE::AI_ONNX_TRAINING_DOMAIN) ||
       model_info->HasDomain(ONNX_NAMESPACE::AI_ONNX_PREVIEW_TRAINING_DOMAIN)) {
@@ -918,17 +900,21 @@ static ORT_STRING_VIEW provider_name_armnn = ORT_TSTR("armnn");
 static ORT_STRING_VIEW provider_name_dml = ORT_TSTR("dml");
 
 ::std::vector<::std::basic_string<ORTCHAR_T>> GetParameterStrings() {
+  // Map key is provider name(CPU, CUDA, etc). Value is the ONNX node tests' opsets to run.
   std::map<ORT_STRING_VIEW, std::vector<ORT_STRING_VIEW>> provider_names;
+  // The default CPU provider always supports all opsets, and must maintain backwards compatibility.
   provider_names[provider_name_cpu] = {opset7, opset8, opset9, opset10, opset11, opset12, opset13, opset14, opset15, opset16, opset17, opset18};
-
+  // The other EPs can choose which opsets to test.
+  // If an EP doesn't have any CI build pipeline, then there is no need to specify any opset.
 #ifdef USE_TENSORRT
-  provider_names[provider_name_tensorrt] = {opset7, opset8, opset9, opset10, opset11, opset12, opset13, opset14, opset15, opset16, opset17, opset18};
+  // tensorrt: only enable opset 14 to 17 of onnx tests
+  provider_names[provider_name_tensorrt] = {opset14, opset15, opset16, opset17};
 #endif
 #ifdef USE_MIGRAPHX
   provider_names[provider_name_migraphx] = {opset7, opset8, opset9, opset10, opset11, opset12, opset13, opset14, opset15, opset16, opset17, opset18};
 #endif
 #ifdef USE_OPENVINO
-  provider_names[provider_name_openvino] = {opset7, opset8, opset9, opset10, opset11, opset12, opset13, opset14, opset15, opset16, opset17, opset18};
+  provider_names[provider_name_openvino] = {};
 #endif
 #ifdef USE_CUDA
   provider_names[provider_name_cuda] = {opset7, opset8, opset9, opset10, opset11, opset12, opset13, opset14, opset15, opset16, opset17, opset18};
@@ -937,20 +923,20 @@ static ORT_STRING_VIEW provider_name_dml = ORT_TSTR("dml");
   provider_names[provider_name_rocm] = {opset7, opset8, opset9, opset10, opset11, opset12, opset13, opset14, opset15, opset16, opset17, opset18};
 #endif
 #ifdef USE_DNNL
-  provider_names[provider_name_dnnl] = {opset7, opset8, opset9, opset10, opset11, opset12, opset13, opset14, opset15, opset16, opset17, opset18};
+  provider_names[provider_name_dnnl] = {opset10};
 #endif
 // For any non-Android system, NNAPI will only be used for ort model converter
 #if defined(USE_NNAPI) && defined(__ANDROID__)
   provider_names[provider_name_nnapi] = {opset7, opset8, opset9, opset10, opset11, opset12, opset13, opset14, opset15, opset16, opset17, opset18};
 #endif
 #ifdef USE_RKNPU
-  provider_names[provider_name_rknpu] = {opset7, opset8, opset9, opset10, opset11, opset12, opset13, opset14, opset15, opset16, opset17, opset18};
+  provider_names[provider_name_rknpu] = {};
 #endif
 #ifdef USE_ACL
-  provider_names[provider_name_acl] = {opset7, opset8, opset9, opset10, opset11, opset12, opset13, opset14, opset15, opset16, opset17, opset18};
+  provider_names[provider_name_acl] = {};
 #endif
 #ifdef USE_ARMNN
-  provider_names[provider_name_armnn] = {opset7, opset8, opset9, opset10, opset11, opset12, opset13, opset14, opset15, opset16, opset17, opset18};
+  provider_names[provider_name_armnn] = {};
 #endif
 #ifdef USE_DML
   provider_names[provider_name_dml] = {opset7, opset8, opset9, opset10, opset11, opset12, opset13, opset14, opset15, opset16, opset17, opset18};
@@ -1132,7 +1118,7 @@ static ORT_STRING_VIEW provider_name_dml = ORT_TSTR("dml");
   std::vector<std::basic_string<ORTCHAR_T>> paths;
 
   for (std::pair<ORT_STRING_VIEW, std::vector<ORT_STRING_VIEW>> kvp : provider_names) {
-#if !defined(USE_OPENVINO)
+    // Setup ONNX node tests. The test data is preloaded on our CI build machines.
 #if !defined(_WIN32)
     ORT_STRING_VIEW node_test_root_path = ORT_TSTR("/data/onnx");
 #else
@@ -1141,7 +1127,19 @@ static ORT_STRING_VIEW provider_name_dml = ORT_TSTR("dml");
     for (auto p : kvp.second) {
       paths.push_back(ConcatPathComponent(node_test_root_path, p));
     }
+
+    // Same as the above, except this one is for large models
+#if defined(NDEBUG) || defined(RUN_MODELTEST_IN_DEBUG_MODE)
+#ifdef _WIN32
+    ORT_STRING_VIEW model_test_root_path = ORT_TSTR("..\\models");
+#else
+    ORT_STRING_VIEW model_test_root_path = ORT_TSTR("../models");
 #endif
+    for (auto p : kvp.second) {
+      paths.push_back(ConcatPathComponent(model_test_root_path, p));
+    }
+#endif
+
     ORT_STRING_VIEW provider_name = kvp.first;
     std::unordered_set<std::basic_string<ORTCHAR_T>> all_disabled_tests(std::begin(immutable_broken_tests),
                                                                         std::end(immutable_broken_tests));
@@ -1189,13 +1187,6 @@ static ORT_STRING_VIEW provider_name_dml = ORT_TSTR("dml");
     all_disabled_tests.insert(ORT_TSTR("fp16_shufflenet"));
     all_disabled_tests.insert(ORT_TSTR("fp16_inception_v1"));
     all_disabled_tests.insert(ORT_TSTR("fp16_tiny_yolov2"));
-#if defined(NDEBUG) || defined(RUN_MODELTEST_IN_DEBUG_MODE)
-#ifdef _WIN32
-    paths.push_back(ORT_TSTR("..\\models"));
-#else
-    paths.push_back(ORT_TSTR("../models"));
-#endif
-#endif
 
     while (!paths.empty()) {
       std::basic_string<ORTCHAR_T> node_data_root_path = paths.back();
