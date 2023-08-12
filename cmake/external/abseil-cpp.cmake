@@ -1,33 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-include(FetchContent)
-
-# Pass to build
-set(ABSL_PROPAGATE_CXX_STD 1)
-set(BUILD_TESTING 0)
-
-if(Patch_FOUND AND WIN32)
-  set(ABSL_PATCH_COMMAND ${Patch_EXECUTABLE} --binary --ignore-whitespace -p1 < ${PROJECT_SOURCE_DIR}/patches/abseil/absl_windows.patch)
-else()
-  set(ABSL_PATCH_COMMAND "")
-endif()
-
-# NB! Advancing Abseil version changes its internal namespace,
-# currently absl::lts_20211102 which affects abseil-cpp.natvis debugger
-# visualization file, that must be adjusted accordingly, unless we eliminate
-# that namespace at build time.
-FetchContent_Declare(
-    abseil_cpp
-    URL ${DEP_URL_abseil_cpp}
-    URL_HASH SHA1=${DEP_SHA1_abseil_cpp}
-    PATCH_COMMAND ${ABSL_PATCH_COMMAND}
-)
-
-onnxruntime_fetchcontent_makeavailable(abseil_cpp)
-FetchContent_GetProperties(abseil_cpp)
-set(ABSEIL_SOURCE_DIR ${abseil_cpp_SOURCE_DIR})
-message(STATUS "Abseil source dir:" ${ABSEIL_SOURCE_DIR})
+find_package(absl CONFIG REQUIRED)
 
 if (GDK_PLATFORM)
   # Abseil considers any partition that is NOT in the WINAPI_PARTITION_APP a viable platform

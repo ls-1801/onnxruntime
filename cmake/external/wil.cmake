@@ -3,20 +3,9 @@
 set(WIL_BUILD_PACKAGING OFF CACHE BOOL "" FORCE)
 set(WIL_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 
-FetchContent_Declare(
-    microsoft_wil
-    URL ${DEP_URL_microsoft_wil}
-	URL_HASH SHA1=${DEP_SHA1_microsoft_wil}
-    FIND_PACKAGE_ARGS NAMES wil
-)
 #We can not use FetchContent_MakeAvailable(microsoft_wil) at here, since their cmake file
 #always executes install command without conditions.
-FetchContent_Populate(microsoft_wil)
 if(NOT wil_FOUND)
   find_package(wil CONFIG REQUIRED)
   add_library(wil ALIAS WIL::WIL)
-
-  # The interface's include directory.
-  target_include_directories(WIL INTERFACE
-    $<BUILD_INTERFACE:${microsoft_wil_SOURCE_DIR}/include>)
 endif()

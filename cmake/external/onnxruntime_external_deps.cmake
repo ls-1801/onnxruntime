@@ -23,13 +23,7 @@ if(NOT onnxruntime_DISABLE_ABSEIL)
   include(external/abseil-cpp.cmake)
 endif()
 
-set(RE2_BUILD_TESTING OFF CACHE BOOL "" FORCE)
-FetchContent_Declare(
-    re2
-    URL ${DEP_URL_re2}
-    URL_HASH SHA1=${DEP_SHA1_re2}
-    FIND_PACKAGE_ARGS NAMES re2
-)
+find_package(re2 CONFIG REQUIRED)
 
 if (onnxruntime_BUILD_UNIT_TESTS)
   # WebAssembly threading support in Node.js is still an experimental feature and
@@ -113,7 +107,7 @@ if(CMAKE_CROSSCOMPILING AND NOT ONNX_CUSTOM_PROTOC_EXECUTABLE AND NOT CMAKE_OSX_
     elseif(CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86")
       FetchContent_Declare(protoc_binary URL ${DEP_URL_protoc_win32} URL_HASH SHA1=${DEP_SHA1_protoc_win32})
       FetchContent_Populate(protoc_binary)
-    endif() 
+    endif()
     if(protoc_binary_SOURCE_DIR)
       message("Use prebuilt protoc")
       set(ONNX_CUSTOM_PROTOC_EXECUTABLE ${protoc_binary_SOURCE_DIR}/bin/protoc.exe)
@@ -166,35 +160,15 @@ endif()
 include(protobuf_function)
 #protobuf end
 
-set(ENABLE_DATE_TESTING  OFF CACHE BOOL "" FORCE)
-set(USE_SYSTEM_TZ_DB  ON CACHE BOOL "" FORCE)
-
-FetchContent_Declare(
-      date
-      URL ${DEP_URL_date}
-      URL_HASH SHA1=${DEP_SHA1_date}
-    )
-onnxruntime_fetchcontent_makeavailable(date)
+find_package(date CONFIG REQUIRED)
 
 
+find_path(BOOST_MP11_INCLUDES NAMES mp11.hpp PATH_SUFFIXES include/boost)
+add_library(Boost::mp11 INTERFACE IMPORTED)
+target_include_directories(Boost::mp11 INTERFACE ${BOOST_MP11_INCLUDES})
 
-FetchContent_Declare(
-  mp11
-  URL ${DEP_URL_mp11}
-  URL_HASH SHA1=${DEP_SHA1_mp11}
-)
+find_package(nlohmann_json CONFIG REQUIRED)
 
-set(JSON_BuildTests OFF CACHE INTERNAL "")
-set(JSON_Install OFF CACHE INTERNAL "")
-set(JSON_BuildTests OFF CACHE INTERNAL "")
-set(JSON_Install OFF CACHE INTERNAL "")
-
-FetchContent_Declare(
-    nlohmann_json
-    URL ${DEP_URL_json}
-    URL_HASH SHA1=${DEP_SHA1_json}
-    FIND_PACKAGE_ARGS 3.10 NAMES nlohmann_json
-)
 
 #TODO: include clog first
 if (onnxruntime_ENABLE_CPUINFO)
@@ -251,17 +225,8 @@ if (CPUINFO_SUPPORTED)
   endif()
 
 
-  set(CPUINFO_BUILD_TOOLS OFF CACHE INTERNAL "")
-  set(CPUINFO_BUILD_UNIT_TESTS OFF CACHE INTERNAL "")
-  set(CPUINFO_BUILD_MOCK_TESTS OFF CACHE INTERNAL "")
-  set(CPUINFO_BUILD_BENCHMARKS OFF CACHE INTERNAL "")
-
-  FetchContent_Declare(
-    pytorch_cpuinfo
-    URL ${DEP_URL_pytorch_cpuinfo}
-    URL_HASH SHA1=${DEP_SHA1_pytorch_cpuinfo}
-    FIND_PACKAGE_ARGS NAMES cpuinfo
-  )
+  find_package(unofficial-cpuinfo CONFIG REQUIRED)
+  add_library(cpuinfo ALIAS unofficial::cpuinfo::cpuinfo)
 
 endif()
 
@@ -272,12 +237,8 @@ endif()
 
 if (NOT WIN32)
   #nsync tests failed on Mac Build
-  set(NSYNC_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
-  onnxruntime_fetchcontent_makeavailable(google_nsync)
-  if (google_nsync_SOURCE_DIR)
-    add_library(nsync::nsync_cpp ALIAS nsync_cpp)
-    target_include_directories(nsync_cpp PUBLIC ${google_nsync_SOURCE_DIR}/public)
-  endif()
+  find_package(unofficial-nsync CONFIG REQUIRED)
+  get_target_property(NSYNC_INCLUDE_DIR unofficial::nsync::nsync_cpp INTERFACE_INCLUDE_DIRECTORIES)
 endif()
 
 if(onnxruntime_USE_CUDA)
@@ -391,12 +352,7 @@ else()
   set(ONNXRUNTIME_ONNX_PATCH_COMMAND "")
 endif()
 
-FetchContent_Declare(
-  onnx
-  URL ${DEP_URL_onnx}
-  URL_HASH SHA1=${DEP_SHA1_onnx}
-  PATCH_COMMAND ${ONNXRUNTIME_ONNX_PATCH_COMMAND}
-)
+find_package(ONNX CONFIG REQUIRED)
 
 
 if (CPUINFO_SUPPORTED)
@@ -453,9 +409,11 @@ set(onnxruntime_EXTERNAL_LIBRARIES ${onnxruntime_EXTERNAL_LIBRARIES_XNNPACK} WIL
 # The other libs do not have the problem. All the sources are already there. We can compile them in any order.
 set(onnxruntime_EXTERNAL_DEPENDENCIES onnx_proto flatbuffers::flatbuffers)
 
+if(0)
 target_compile_definitions(onnx PUBLIC $<TARGET_PROPERTY:onnx_proto,INTERFACE_COMPILE_DEFINITIONS> PRIVATE "__ONNX_DISABLE_STATIC_REGISTRATION")
 if (NOT onnxruntime_USE_FULL_PROTOBUF)
   target_compile_definitions(onnx PUBLIC "__ONNX_NO_DOC_STRINGS")
+endif()
 endif()
 
 if (onnxruntime_RUN_ONNX_TESTS)
