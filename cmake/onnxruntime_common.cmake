@@ -193,9 +193,12 @@ if (ARM64 OR ARM OR X86 OR X64 OR X86_64)
     # Link cpuinfo if supported
     # Using it mainly in ARM with Android.
     # Its functionality in detecting x86 cpu features are lacking, so is support for Windows.
+    if (NOT TARGET unofficial::cpuinfo::clog)
+      find_package(unofficial-cpuinfo CONFIG REQUIRED)
+    endif()
     if (CPUINFO_SUPPORTED)
-      onnxruntime_add_include_to_target(onnxruntime_common cpuinfo::cpuinfo)
-      list(APPEND onnxruntime_EXTERNAL_LIBRARIES cpuinfo::cpuinfo cpuinfo::clog)
+      onnxruntime_add_include_to_target(onnxruntime_common unofficial::cpuinfo)
+      list(APPEND onnxruntime_EXTERNAL_LIBRARIES unofficial::cpuinfo::clog)
     endif()
   endif()
 endif()

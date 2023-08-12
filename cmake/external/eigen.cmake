@@ -1,8 +1,7 @@
 
 if (onnxruntime_USE_PREINSTALLED_EIGEN)
-    add_library(eigen INTERFACE)
-    file(TO_CMAKE_PATH ${eigen_SOURCE_PATH} eigen_INCLUDE_DIRS)
-    target_include_directories(eigen INTERFACE ${eigen_INCLUDE_DIRS})
+    find_package(Eigen3 CONFIG REQUIRED)
+    add_library(eigen ALIAS Eigen3::Eigen)
 else ()
     if (onnxruntime_USE_ACL)
         FetchContent_Declare(

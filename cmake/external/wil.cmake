@@ -13,8 +13,8 @@ FetchContent_Declare(
 #always executes install command without conditions.
 FetchContent_Populate(microsoft_wil)
 if(NOT wil_FOUND)
-  add_library(WIL INTERFACE)
-  add_library(WIL::WIL ALIAS WIL)
+  find_package(wil CONFIG REQUIRED)
+  add_library(wil ALIAS WIL::WIL)
 
   # The interface's include directory.
   target_include_directories(WIL INTERFACE

@@ -12,8 +12,9 @@ endif()
 
 #TODO: if protobuf is a shared lib and onnxruntime_USE_FULL_PROTOBUF is ON, then onnx_proto should be built as a shared lib instead of a static lib. Otherwise any code outside onnxruntime.dll can't use onnx protobuf definitions if they share the protobuf.dll with onnxruntime. For example, if protobuf is a shared lib and onnx_proto is a static lib then onnxruntime_perf_test won't work.
 
+find_package(ONNX CONFIG REQUIRED)
 
-
+if(0)
 FetchContent_Populate(onnx)
 set(ONNX_SOURCE_ROOT ${onnx_SOURCE_DIR})
 
@@ -99,4 +100,4 @@ else()
     target_compile_options(onnx PRIVATE "-Wno-unused-but-set-variable")
   endif()
 endif()
-
+endif()
